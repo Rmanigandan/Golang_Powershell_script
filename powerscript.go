@@ -1,0 +1,54 @@
+package main
+
+import (
+	"cron"
+	"fmt"
+	"os"
+	"os/exec"
+)
+
+/*
+Algorithm:
+	1 . find the path of powershell executable.
+	2 . make the string of destination folder in which the script is going to execute.
+	3 . Run the script in powershell executable.
+	4 . scheduling the task at specified time using cron package.
+*/
+
+// This function is going to execute the powershell script in the destination folder.
+func scriptRunner() {
+
+	//Powershell executable path finding block.
+	var rootDir = os.Getenv("windir")
+	var defaultPath = "\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
+	powershellPath := rootDir + defaultPath
+
+	//Destination directory in which script is going to run.
+	//get-childitem -path "..\log\" * -recurse -include *.log | where-object{$_.LastWriteTime -lt (get-date).adddays(-30)}  |  remove-item
+	var listDir = "get-childitem -path ..\\log\\"
+	var dirName = " * -recurse -include *.log |"
+	var condition = " where-object{$_.LastWriteTime -lt (get-date).adddays(-30)} | remove-item"
+	//-30 remove-item -recurse
+	var script = listDir + dirName + condition
+
+	_, err := exec.Command(powershellPath, script).Output()
+	if err != nil {
+		fmt.Println("Cant able to run powershell script properly", err)
+	}
+	//fmt.Println(string(out))
+}
+
+func taskRunner() {
+	a := cron.New()
+	//Here scheduling can be mentioned as per our need.
+	_, err := a.AddFunc("@every 5s", scriptRunner)
+	a.Start()
+	if err != nil {
+		fmt.Println("Error raised in taskRunner")
+	}
+}
+
+func main() {
+	taskRunner()
+	fmt.Scanln()
+}
