@@ -25,17 +25,17 @@ func scriptRunner() {
 
 	//Destination directory in which script is going to run.
 	//get-childitem -path "..\log\" * -recurse -include *.log | where-object{$_.LastWriteTime -lt (get-date).adddays(-30)}  |  remove-item
-	// var listDir = "get-childitem -path ..\\log\\"
-	// var dirName = " * -recurse -include *.log |"
-	// var condition = " where-object{$_.LastWriteTime -lt (get-date).adddays(-30)} | remove-item"
-	// //-30 remove-item -recurse
-	// var script = listDir + dirName + condition
+	var listDir = "get-childitem -path ..\\log\\"
+	var dirName = " * -recurse -include *.txt |"
+	var condition = " where-object{$_.LastWriteTime -lt (get-date).adddays(-30)} | remove-item"
+	//-30 remove-item -recurse
+	var script = listDir + dirName + condition
 
-	out, err := exec.Command(powershellPath, "dir").Output()
+	_, err := exec.Command(powershellPath, script).Output()
 	if err != nil {
 		fmt.Println("Cant able to run powershell script properly", err)
 	}
-	fmt.Println(string(out))
+	//fmt.Println(string(out))
 }
 
 func taskRunner() {

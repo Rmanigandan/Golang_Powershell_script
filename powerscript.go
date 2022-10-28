@@ -24,9 +24,8 @@ func scriptRunner() {
 	powershellPath := rootDir + defaultPath
 
 	//Destination directory in which script is going to run.
-	//get-childitem -path "..\log\" * -recurse -include *.log | where-object{$_.LastWriteTime -lt (get-date).adddays(-30)}  |  remove-item
 	var listDir = "get-childitem -path ..\\log\\"
-	var dirName = " * -recurse -include *.log |"
+	var dirName = " * -recurse -include *.txt |"
 	var condition = " where-object{$_.LastWriteTime -lt (get-date).adddays(-30)} | remove-item"
 	//-30 remove-item -recurse
 	var script = listDir + dirName + condition
@@ -41,7 +40,8 @@ func scriptRunner() {
 func taskRunner() {
 	a := cron.New()
 	//Here scheduling can be mentioned as per our need.
-	_, err := a.AddFunc("@every 5s", scriptRunner)
+	scriptRunner()
+	_, err := a.AddFunc("@every 24h", scriptRunner)
 	a.Start()
 	if err != nil {
 		fmt.Println("Error raised in taskRunner")
