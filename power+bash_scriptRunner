@@ -1,0 +1,61 @@
+package main
+/*
+This file has been created for eradicate the longer files in both windows and linux distributions
+*/
+import (
+	"fmt"
+	"os"
+	"os/exec"
+	"runtime"
+)
+
+func powershellScriptRunner() {
+	//Powershell executable path finding block.
+	var rootDir = os.Getenv("windir")
+	var defaultPath = "\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
+	powershellPath := rootDir + defaultPath
+
+	//Destination directory in which script is going to run.
+	var listDir = "get-childitem -path ..\\log\\"
+	var dirName = " * -recurse -include *.txt |"
+	var condition = " where-object{$_.LastWriteTime -lt (get-date).adddays(-30)} | remove-item"
+	//-30 remove-item -recurse
+	var script = listDir + dirName + condition
+
+	_, err := exec.Command(powershellPath, script).Output()
+	if err != nil {
+		fmt.Println("Cant able to run powershell script properly", err)
+	}
+}
+
+
+func bashScriptRunner() {
+	//if the os is linux this function will execute.
+	executable := "bash"
+    path := "cd ../log/;"    
+    command := "find -name '*.txt' -mtime "
+    days := " +0 "
+    action := " -delete"
+    script := path+command+days+action
+
+	_, err :=	exec.Command(executable, "-c", script).Output()   
+    if err != nil {
+        fmt.Println("Cant able to run bash script properly", err)
+    }
+}
+
+// This function is going to execute the powershell script in the destination folder.
+func scriptRunner() {
+	osDist := runtime.GOOS
+	switch osDist {
+	case "windows":
+		powershellScriptRunner()
+	case "linux":
+		bashScriptRunner()
+	}
+}
+
+func main() {
+	scriptRunner()
+}
+
