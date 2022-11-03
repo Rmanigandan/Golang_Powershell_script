@@ -1,0 +1,58 @@
+//powershellScriptRunner : function going to perform log deletion in windows environment
+func powershellScriptRunner() {
+	//Powershell executable path finding block.
+	rootDir := os.Getenv("windir")
+	defaultPath := "\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
+	executable := rootDir + defaultPath //powershell executable path
+
+	//Destination directory in which script is going to run.
+	listDir := "get-childitem -path ..\\log\\"
+	dirName := " * -recurse -include *.txt |"
+	//days := "30"
+	days := config.GetM365LogFilesRetainableDays()
+	condition := " where-object{$_.LastWriteTime -lt (get-date).adddays(-" + days + ")} | remove-item"
+	//-30 remove-item -recurse
+	script := listDir + dirName + condition
+
+	_, err := exec.Command(executable, script).Output()
+	if err != nil {
+		fmt.Println("Cant able to run powershell script properly", err)
+	}
+}
+
+//bashScriptRunner : function going to perform log deletion in linux distribution.
+func bashScriptRunner() {
+	executable := "bash"
+	path := "cd ../log/;"
+	command := "find -name '*.txt' -mtime "
+	//days := " +0 "
+	days := config.GetM365LogFilesRetainableDays()
+	action := " -delete"
+	script := path + command + "+" + days + action
+
+	_, err := exec.Command(executable, "-c", script).Output()
+	if err != nil {
+		fmt.Println("Cant able to run bash script properly", err)
+	}
+}
+
+func scriptRunner() {
+	osDist := runtime.GOOS
+	switch osDist {
+	case "windows":
+		powershellScriptRunner()
+	case "linux":
+		bashScriptRunner()
+	}
+}
+
+func taskRunner() {
+	a := cron.New()
+	//Here scheduling can be mentioned as per our need.
+	scriptRunner()
+	_, err := a.AddFunc("@every 24h", scriptRunner)
+	a.Start()
+	if err != nil {
+		fmt.Println("Error raised in taskRunner")
+	}
+}
